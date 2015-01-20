@@ -129,6 +129,24 @@ def parse_wp_xml(file):
                     result = unicode(result)
                 return result
 
+            def get_comment_content(q):
+                commentlist = []
+
+                namespace = ''
+                tag = ''
+                if q.find(':') > 0:
+                    namespace, tag = q.split(':', 1)
+                else:
+                    tag = q
+                for comment in i.findall(ns[namespace] + tag):
+                    text = comment.find(ns[namespace] + 'comment_content').text
+                    date = datetime.strptime(comment.find(ns[namespace] + 'comment_date_gmt').text, date_fmt)
+                    author = comment.find(ns[namespace] + 'comment_author').text
+                    author_url = comment.find(ns[namespace] + 'comment_author_url').text
+                    commentlist.append({'text': text, 'date': date, 'author': author, 'author_url': author_url})
+
+                return sorted(commentlist, key=lambda x: x['date'], reverse=True)
+
             body = gi('content:encoded')
             for key in body_replace:
                 # body = body.replace(key, body_replace[key])
@@ -157,6 +175,7 @@ def parse_wp_xml(file):
                 'wp_id': gi('wp:post_id'),
                 'parent': gi('wp:post_parent'),
                 'comments': gi('wp:comment_status') == u'open',
+                'comments_content': get_comment_content('wp:comment'),
                 'taxanomies': export_taxanomies,
                 'body': body,
                 'excerpt': excerpt,
@@ -292,6 +311,7 @@ def write_jekyll(data, target_format):
             'slug': i['slug'],
             'wordpress_id': int(i['wp_id']),
             'comments': i['comments'],
+            'comments_content': i['comments_content']
         }
         if len(i['excerpt']) > 0:
             yaml_header['excerpt'] = i['excerpt']
