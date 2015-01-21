@@ -140,7 +140,8 @@ def parse_wp_xml(file):
                     tag = q
                 for comment in i.findall(ns[namespace] + tag):
                     text = comment.find(ns[namespace] + 'comment_content').text
-                    date = datetime.strptime(comment.find(ns[namespace] + 'comment_date_gmt').text, date_fmt)
+                    date = datetime.strptime(comment.find(ns[namespace] + 'comment_date_gmt').text,
+                                             '%Y-%m-%d %H:%M:%S').replace(tzinfo=UTC())
                     author = comment.find(ns[namespace] + 'comment_author').text
                     author_url = comment.find(ns[namespace] + 'comment_author_url').text
                     commentlist.append({'text': text, 'date': date, 'author': author, 'author_url': author_url})
